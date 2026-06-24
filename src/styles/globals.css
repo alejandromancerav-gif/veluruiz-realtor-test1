@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply transition-colors duration-300 ease-in-out;
+  }
+  
+  /* Suavizar las barras de desplazamiento para el catálogo */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-brand-navy-200 dark:bg-brand-navy-700 rounded-full;
+  }
+}
+
+.glassmorphism {
+  @apply bg-white/70 dark:bg-brand-navy-900/70 backdrop-blur-md border border-white/20 dark:border-brand-navy-800/50;
+}
