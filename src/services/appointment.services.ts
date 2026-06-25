@@ -30,4 +30,22 @@ export const appointmentService = {
       data: createPayload,
     });
   },
+
+  async getAppointments(params: { page?: number; pageSize?: number } = {}) {
+    const page     = params.page     ?? 1;
+    const pageSize = params.pageSize ?? 25;
+    const skip     = (page - 1) * pageSize;
+
+    const [data, total] = await Promise.all([
+      db.appointment.findMany({
+        skip,
+        take: pageSize,
+        orderBy: { createdAt: 'desc' },
+        include: { property: { select: { id: true, title: true } } },
+      }),
+      db.appointment.count(),
+    ]);
+
+    return { data, meta: { page, pageSize, total, hasMore: skip + data.length < total } };
+  },
 };

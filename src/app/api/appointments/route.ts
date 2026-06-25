@@ -1,10 +1,36 @@
 import { NextResponse } from 'next/server';
 import { appointmentService } from '@/services/appointment.services';
 import { appointmentSchema } from '@/lib/validations/appointment';
+import { createClient } from '@/lib/supabase/server';
 
 const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
 const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_WINDOW_MS = 3_600_000;
+
+export async function GET(request: Request) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  }
+  const { data: profile } = await supabase
+    .from('profiles').select('role').eq('id', user.id).single();
+  if (profile?.role !== 'empleado') {
+    return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
+  }
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const params = {
+      page:     Number(searchParams.get('page')     ?? '1'),
+      pageSize: Number(searchParams.get('pageSize') ?? '25'),
+    };
+    const result = await appointmentService.getAppointments(params);
+    return NextResponse.json(result, { status: 200 });
+  } catch (error) {
+    return NextResponse.json({ error: 'Error al obtener solicitudes' }, { status: 500 });
+  }
+}
 
 export async function POST(request: Request) {
   const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
