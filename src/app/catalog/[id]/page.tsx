@@ -238,10 +238,11 @@ export default function PropertyDetailPage() {
         </div>
       </div>
 
-      <ScheduleModal 
-        isOpen={isModalOpen} 
+      <ScheduleModal
+        isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         propertyTitle={title}
+        propertyId={property.id}
         language={language}
       />
     </div>

@@ -8,6 +8,7 @@ export const appointmentService = {
     clientEmail: string;
     clientPhone: string;
     preferredDate: Date;
+    notes?: string | null;
     calendlyUri?: string | null;
     status: string;
   }) {
@@ -16,6 +17,7 @@ export const appointmentService = {
       clientEmail: data.clientEmail,
       clientPhone: data.clientPhone,
       preferredDate: data.preferredDate,
+      notes: data.notes || null,
       calendlyUri: data.calendlyUri || null,
       status: data.status,
     };

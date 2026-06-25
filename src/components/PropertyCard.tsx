@@ -101,7 +101,7 @@ export default function PropertyCard({ property, onDelete }: PropertyCardProps) 
         </Link>
       </div>
 
-      <AppointmentModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} propertyTitle={property.title} language={language} />
+      <AppointmentModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} propertyTitle={property.title} propertyId={property.id} language={language} />
     </div>
   );
 }

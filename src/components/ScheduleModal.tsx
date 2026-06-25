@@ -7,12 +7,13 @@ interface ScheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
   propertyTitle: string;
+  propertyId?: string;
   language: 'es' | 'en';
 }
 
-export default function ScheduleModal({ isOpen, onClose, propertyTitle, language }: ScheduleModalProps) {
+export default function ScheduleModal({ isOpen, onClose, propertyTitle, propertyId, language }: ScheduleModalProps) {
   const [form, setForm] = useState({ name: '', email: '', phone: '', date: '', message: '' });
-  const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
+  const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
 
   // Accesibilidad: Cerrar con la tecla ESC
   useEffect(() => {
@@ -23,13 +24,27 @@ export default function ScheduleModal({ isOpen, onClose, propertyTitle, language
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('submitting');
-    // Simulación de carga asíncrona de nivel de producción
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          propertyId:    propertyId ?? null,
+          clientName:    form.name,
+          clientEmail:   form.email,
+          clientPhone:   form.phone,
+          preferredDate: form.date,
+          notes:         form.message || null,
+        }),
+      });
+      if (!res.ok) throw new Error();
       setStatus('success');
-    }, 1200);
+    } catch {
+      setStatus('error');
+    }
   };
 
   return (
@@ -145,6 +160,14 @@ export default function ScheduleModal({ isOpen, onClose, propertyTitle, language
                     />
                   </div>
                 </div>
+
+                {status === 'error' && (
+                  <p className="text-sm text-red-500 text-center">
+                    {language === 'en'
+                      ? 'Something went wrong. Please try again.'
+                      : 'Ocurrió un error. Por favor intenta de nuevo.'}
+                  </p>
+                )}
 
                 <button
                   type="submit"
