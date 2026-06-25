@@ -45,6 +45,7 @@ Per FEATURE_SPEC section 3 — now unblocked by Batch 2 (auth) and Batch 4 (isPr
 
 ## Batch 7 — Cleanup (low risk, no rush — no deadline pressure currently)
 I-3 (migration drift), I-6 (Favorites mock data), I-7 (empty stub files), I-8 (duplicate Property types), I-10 (SVG path), I-11 (contact form), I-13 (operationType data inconsistency), all Polish items P-1 through P-10.
+- **Found during Batch 4 (admin panel):** el role check ('empleado') está duplicado inline en tres lugares (POST de api/properties, DELETE de api/properties/[id], GET de api/appointments) — los tres bloques son idénticos. Extraer a un helper reutilizable (ej. requireEmployeeRole(request)) cuando se llegue a este lote.
 
 ## Open question for Alejandro
 I-6 (Favorites page uses mock data, never matches real properties) — fold into Batch 7, or treat as a quick win earlier since it's user-facing breakage? Your call.
