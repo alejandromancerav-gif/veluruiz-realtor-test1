@@ -37,7 +37,85 @@ export const propertyService = {
       console.error("DEBUG: Error en servicio al listar:", error);
       throw error;
     }
-  }, // <--- Asegúrate de poner una coma aquí
+  },
+
+  async getProperties(params: {
+    page?: number;
+    pageSize?: number;
+    operationType?: string;
+    type?: string;
+    city?: string;
+    search?: string;
+    minPrice?: number;
+    maxPrice?: number;
+  }) {
+    try {
+      const page = params.page ?? 1;
+      const pageSize = params.pageSize ?? 20;
+      const skip = (page - 1) * pageSize;
+
+      const where = {
+        ...(params.operationType && params.operationType !== 'all' && { operationType: params.operationType }),
+        ...(params.type         && params.type         !== 'all' && { type:          params.type }),
+        ...(params.city         && params.city          !== 'all' && { city:          params.city }),
+        ...((params.minPrice || params.maxPrice) && {
+          price: {
+            ...(params.minPrice && { gte: params.minPrice }),
+            ...(params.maxPrice && { lte: params.maxPrice }),
+          },
+        }),
+        ...(params.search && {
+          OR: [
+            { title: { contains: params.search, mode: 'insensitive' as const } },
+            { zone:  { contains: params.search, mode: 'insensitive' as const } },
+            { city:  { contains: params.search, mode: 'insensitive' as const } },
+          ],
+        }),
+      };
+
+      const [data, total] = await Promise.all([
+        db.property.findMany({ where, orderBy: { createdAt: 'desc' }, skip, take: pageSize }),
+        db.property.count({ where }),
+      ]);
+
+      return { data, meta: { page, pageSize, total, hasMore: skip + data.length < total } };
+    } catch (error) {
+      console.error("DEBUG: Error en servicio al listar paginado:", error);
+      throw error;
+    }
+  },
+
+  async getPropertyFacets() {
+    try {
+      const [cities, types] = await Promise.all([
+        db.property.findMany({ distinct: ['city'], select: { city: true } }),
+        db.property.findMany({ distinct: ['type'], select: { type: true } }),
+      ]);
+      return {
+        cities: cities.map(r => r.city),
+        types:  types.map(r => r.type),
+      };
+    } catch (error) {
+      console.error("DEBUG: Error en servicio al obtener facets:", error);
+      throw error;
+    }
+  },
+
+  async getChatContext(limit = 30) {
+    try {
+      return db.property.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: {
+          title: true, city: true, price: true, type: true,
+          bedrooms: true, bathrooms: true, description: true,
+        },
+      });
+    } catch (error) {
+      console.error("DEBUG: Error en servicio al obtener contexto del chat:", error);
+      throw error;
+    }
+  },
 
   async deleteProperty(id: string) {
     try {

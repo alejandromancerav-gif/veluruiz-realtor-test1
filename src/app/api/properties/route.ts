@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server";
 import { propertyService } from "@/services/property.service";
 
-// 1. Manejador para listar propiedades
-export async function GET() {
+// 1. Manejador para listar propiedades (paginado + filtrado)
+export async function GET(request: Request) {
   try {
-    const properties = await propertyService.getAllProperties();
-    return NextResponse.json(properties, { status: 200 });
+    const { searchParams } = new URL(request.url);
+    const params = {
+      page:          Number(searchParams.get('page') ?? '1'),
+      pageSize:      Number(searchParams.get('pageSize') ?? '20'),
+      operationType: searchParams.get('operationType') ?? undefined,
+      type:          searchParams.get('type') ?? undefined,
+      city:          searchParams.get('city') ?? undefined,
+      search:        searchParams.get('search') ?? undefined,
+      minPrice:      searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
+      maxPrice:      searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
+    };
+    const result = await propertyService.getProperties(params);
+    return NextResponse.json(result, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: "Error al obtener propiedades" }, { status: 500 });
   }

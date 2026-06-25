@@ -3,14 +3,34 @@ import { generateText } from 'ai';
 import { NextResponse } from 'next/server';
 import { propertyService } from '@/services/property.service';
 
+const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+
 export async function POST(req: Request) {
+  // Rate limiting por IP — protege el free tier de Groq
+  const ip = req.headers.get('x-forwarded-for') ?? 'unknown';
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (entry && now - entry.windowStart < RATE_LIMIT_WINDOW_MS) {
+    if (entry.count >= RATE_LIMIT_MAX) {
+      return NextResponse.json(
+        { text: 'Too many requests / Demasiadas solicitudes. Intenta de nuevo en un momento.' },
+        { status: 429 }
+      );
+    }
+    entry.count++;
+  } else {
+    rateLimitMap.set(ip, { count: 1, windowStart: now });
+  }
+
   try {
     const body = await req.json();
 
     const messages = body.messages || [];
 
-    // OBTENER PROPIEDADES DEL BACKEND
-    const properties = await propertyService.getAllProperties();
+    // OBTENER MUESTRA DEL CATÁLOGO (30 propiedades recientes)
+    const properties = await propertyService.getChatContext(30);
 
     // FORMATEAR PROPIEDADES
     const formattedProperties = properties
