@@ -40,6 +40,13 @@ export const propertyService = {
     }
   },
 
+  async getPropertyById(id: string, includeAll = false) {
+    const property = await db.property.findUnique({ where: { id } });
+    if (!property) return null;
+    if (!includeAll && (!property.isActive || property.isPrivate)) return null;
+    return property;
+  },
+
   async getProperties(params: {
     page?: number;
     pageSize?: number;
@@ -49,6 +56,7 @@ export const propertyService = {
     search?: string;
     minPrice?: number;
     maxPrice?: number;
+    includeAll?: boolean;
   }) {
     try {
       const page = params.page ?? 1;
@@ -56,6 +64,7 @@ export const propertyService = {
       const skip = (page - 1) * pageSize;
 
       const where = {
+        ...(!params.includeAll && { isActive: true, isPrivate: false }),
         ...(params.operationType && params.operationType !== 'all' && { operationType: params.operationType }),
         ...(params.type         && params.type         !== 'all' && { type:          params.type }),
         ...(params.city         && params.city          !== 'all' && { city:          params.city }),
@@ -88,9 +97,10 @@ export const propertyService = {
 
   async getPropertyFacets() {
     try {
+      const where = { isActive: true, isPrivate: false };
       const [cities, types] = await Promise.all([
-        db.property.findMany({ distinct: ['city'], select: { city: true } }),
-        db.property.findMany({ distinct: ['type'], select: { type: true } }),
+        db.property.findMany({ where, distinct: ['city'], select: { city: true } }),
+        db.property.findMany({ where, distinct: ['type'], select: { type: true } }),
       ]);
       return {
         cities: cities.map(r => r.city),

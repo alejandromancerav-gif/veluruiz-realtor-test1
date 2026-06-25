@@ -23,8 +23,6 @@ export default function CatalogPage() {
   const [city, setCity] = useState<string>('all');
   const [minPrice, setMinPrice] = useState<string>('');
   const [maxPrice, setMaxPrice] = useState<string>('');
-  const [onlyPrivate, setOnlyPrivate] = useState<boolean>(false);
-
   // Cargar opciones de filtros (ciudades y tipos únicos) — solo una vez al montar
   useEffect(() => {
     fetch('/api/properties/facets')
@@ -121,10 +119,6 @@ export default function CatalogPage() {
               <input type="number" placeholder="Max $" className="w-1/2 p-2 border rounded-lg text-sm dark:bg-brand-navy-800 dark:text-white" onChange={(e) => setMaxPrice(e.target.value)} />
             </div>
 
-            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-              <input type="checkbox" onChange={(e) => setOnlyPrivate(e.target.checked)} />
-              {language === 'en' ? 'Only Private' : 'Solo Privadas'}
-            </label>
           </aside>
 
           <main className="lg:col-span-3 space-y-6">

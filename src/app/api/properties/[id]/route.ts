@@ -10,7 +10,7 @@ export async function GET(
 ) {
   try {
     const { id } = params;
-    const property = await db.property.findUnique({ where: { id: id } });
+    const property = await propertyService.getPropertyById(id);
 
     if (!property) {
       return NextResponse.json({ error: "Propiedad no encontrada" }, { status: 404 });
