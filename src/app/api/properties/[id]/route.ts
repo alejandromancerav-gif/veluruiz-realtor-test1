@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-// Agrega esta línea para importar tu servicio:
-import { propertyService } from "@/services/property.service"; 
+import { propertyService } from "@/services/property.service";
+import { createClient } from '@/lib/supabase/server';
 
-// ... resto de tu código
-
-// 1. Función GET para cargar el detalle
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -27,20 +24,26 @@ export async function GET(
   }
 }
 
-// 2. Función DELETE para borrar
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   try {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+    const { data: profile } = await supabase
+      .from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role !== 'empleado') {
+      return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
+    }
+
     const { id } = params;
     await propertyService.deleteProperty(id);
     return NextResponse.json({ message: "Propiedad eliminada correctamente" }, { status: 200 });
   } catch (error: any) {
-    // Esto mostrará el error real en tu terminal
-    console.error("DEBUG: Error CRÍTICO en DELETE:", error);
-    return NextResponse.json({
-      error: "No se pudo eliminar"
-    }, { status: 500 });
+    return NextResponse.json({ error: "No se pudo eliminar" }, { status: 500 });
   }
 }

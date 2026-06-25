@@ -5,14 +5,14 @@ export const propertySchema = z.object({
   titleEn: z.string().optional(),
   description: z.string().min(20, "La descripción es muy corta"),
   descriptionEn: z.string().optional(), // Asegúrate de añadir esto si lo tienes en el prisma
-  price: z.number().positive("El precio debe ser mayor a 0"),
+  price: z.coerce.number().positive("El precio debe ser mayor a 0"),
   country: z.string().default("Venezuela"),
   city: z.string().min(2, "Ciudad requerida"),
   zone: z.string().min(2, "Zona requerida"),
-  bedrooms: z.number().int().min(0),
-  bathrooms: z.number().min(0),
-  parkingSpaces: z.number().int().min(0).default(0), // Asegúrate de que coincida con Prisma
-  squareMeters: z.number().positive(),
+  bedrooms: z.coerce.number().int().min(0),
+  bathrooms: z.coerce.number().min(0),
+  parkingSpaces: z.coerce.number().int().min(0).default(0), // Asegúrate de que coincida con Prisma
+  squareMeters: z.coerce.number().positive(),
   status: z.string().default("AVAILABLE"),
   type: z.string().min(1, "El tipo de propiedad es obligatorio"),
   operationType: z.string().min(1, "El tipo de operación es obligatorio"), // <--- ESTO FALTABA

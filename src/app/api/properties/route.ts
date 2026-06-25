@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { propertyService } from "@/services/property.service";
+import { createClient } from '@/lib/supabase/server';
+import { propertySchema } from '@/lib/validations/property';
 
-// 1. Manejador para listar propiedades (paginado + filtrado)
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -22,14 +23,31 @@ export async function GET(request: Request) {
   }
 }
 
-// 2. Manejador para crear propiedad
 export async function POST(request: Request) {
   try {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+    const { data: profile } = await supabase
+      .from('profiles').select('role').eq('id', user.id).single();
+    if (profile?.role !== 'empleado') {
+      return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
+    }
+
     const body = await request.json();
-    const newProperty = await propertyService.createProperty(body);
+    const parsed = propertySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', details: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
+
+    const newProperty = await propertyService.createProperty(parsed.data);
     return NextResponse.json(newProperty, { status: 201 });
   } catch (error: any) {
-    console.error("DEBUG: Error en POST /api/properties:", error);
     return NextResponse.json({ error: "Error al guardar" }, { status: 500 });
   }
 }

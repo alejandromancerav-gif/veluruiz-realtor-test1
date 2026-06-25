@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppState } from '../../context/AppStateContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import AddPropertyModal from '../../components/AddPropertyModal';
 import PropertyCard from '../../components/PropertyCard';
 import { Property } from '../../mock-data/properties';
 
@@ -13,7 +12,6 @@ export default function CatalogPage() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -93,12 +91,6 @@ export default function CatalogPage() {
           <h1 className="text-3xl font-extrabold text-brand-navy-900 dark:text-white tracking-tight">
             {language === 'en' ? 'Property Catalog' : 'Catálogo de Propiedades'}
           </h1>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-sm px-5 py-3 rounded-xl shadow-md transition-all duration-200"
-          >
-            + {language === 'en' ? 'Add Property' : 'Agregar Propiedad'}
-          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -177,14 +169,6 @@ export default function CatalogPage() {
           </main>
         </div>
       </div>
-
-      <AddPropertyModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          fetchProperties({ pg: 1, reset: true });
-        }}
-      />
     </div>
   );
 }
