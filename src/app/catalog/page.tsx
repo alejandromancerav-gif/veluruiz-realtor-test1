@@ -103,7 +103,7 @@ export default function CatalogPage() {
 
             <select className="w-full p-2 border rounded-lg text-sm dark:bg-brand-navy-800 dark:text-white" onChange={(e) => setPropertyType(e.target.value)}>
               <option value="all">{language === 'en' ? 'All Types' : 'Todos los tipos'}</option>
-              {types.map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}
+              {types.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
 
             <select className="w-full p-2 border rounded-lg text-sm dark:bg-brand-navy-800 dark:text-white" onChange={(e) => setCity(e.target.value)}>

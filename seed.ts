@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, PropertyStatus } from '@prisma/client';
 import { Pool } from 'pg';
 import { PrismaPg } from '@prisma/adapter-pg';
 import 'dotenv/config';
@@ -33,7 +33,7 @@ const TYPES = ['Penthouse', 'Casa', 'Apartamento', 'Oficina', 'Local Comercial']
 
 const AMENITIES = ['Piscina', 'Gimnasio', 'Terraza', 'Portero 24h', 'Ascensor', 'Área Social', 'Jardín', 'Generador'];
 
-const STATUS_POOL = ['SOLD', 'RENTED', 'RENTED', 'PENDING'];
+const STATUS_POOL = [PropertyStatus.SOLD, PropertyStatus.RENTED, PropertyStatus.RENTED, PropertyStatus.PENDING];
 
 async function main() {
   console.log('⏳ Generando 75 propiedades de prueba...');
@@ -44,7 +44,7 @@ async function main() {
       const zone = pick(CITIES[city]);
       const type = pick(TYPES);
       const operationType = Math.random() < 0.55 ? 'buy' : 'rent';
-      const status = Math.random() < 0.87 ? 'AVAILABLE' : pick(STATUS_POOL);
+      const status = Math.random() < 0.87 ? PropertyStatus.AVAILABLE : pick(STATUS_POOL);
 
       let price: string;
       let bedrooms: number;
