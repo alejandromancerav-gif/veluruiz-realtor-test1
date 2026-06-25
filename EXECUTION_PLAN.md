@@ -49,3 +49,6 @@ I-3 (migration drift), I-6 (Favorites mock data), I-7 (empty stub files), I-8 (d
 
 ## Open question for Alejandro
 I-6 (Favorites page uses mock data, never matches real properties) — fold into Batch 7, or treat as a quick win earlier since it's user-facing breakage? Your call.
+
+## Backlog — fuera de los lotes actuales
+- **Dark mode por defecto:** hoy el sitio carga siempre en light mode al entrar por primera vez. Cambiar el default a dark mode, respetando la preferencia explícita del usuario si ya eligió light (debe persistir esa elección, no resetear en cada visita). No es parte de ningún lote actual — revisar después de cerrar el Lote 4.

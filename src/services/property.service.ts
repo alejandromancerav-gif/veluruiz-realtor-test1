@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { PropertyUpdateInput } from '@/lib/validations/property';
 
 export const propertyService = {
   async createProperty(data: any) {
@@ -137,5 +138,12 @@ export const propertyService = {
       console.error("DEBUG: Error en servicio al eliminar:", error);
       throw error;
     }
+  },
+
+  async updateProperty(id: string, data: PropertyUpdateInput) {
+    return await db.property.update({
+      where: { id },
+      data,
+    });
   },
 };

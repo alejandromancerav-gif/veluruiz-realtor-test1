@@ -13,7 +13,7 @@ export const propertySchema = z.object({
   bathrooms: z.coerce.number().min(0),
   parkingSpaces: z.coerce.number().int().min(0).default(0), // Asegúrate de que coincida con Prisma
   squareMeters: z.coerce.number().positive(),
-  status: z.string().default("AVAILABLE"),
+  status: z.enum(["AVAILABLE", "SOLD", "RENTED", "PENDING"]).default("AVAILABLE"),
   type: z.string().min(1, "El tipo de propiedad es obligatorio"),
   operationType: z.string().min(1, "El tipo de operación es obligatorio"), // <--- ESTO FALTABA
   images: z.array(z.string().url()).min(1, "Al menos una imagen es requerida"),
@@ -21,3 +21,10 @@ export const propertySchema = z.object({
 });
 
 export type PropertyInput = z.infer<typeof propertySchema>;
+
+export const propertyUpdateSchema = propertySchema.partial().extend({
+  isPrivate: z.boolean().optional(),
+  isActive:  z.boolean().optional(),
+});
+
+export type PropertyUpdateInput = z.infer<typeof propertyUpdateSchema>;
