@@ -6,6 +6,20 @@ import { propertySchema } from '@/lib/validations/property';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+
+    let includeAll = false;
+    if (searchParams.get('includeAll') === 'true') {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles').select('role').eq('id', user.id).single();
+        if (profile?.role === 'empleado') {
+          includeAll = true;
+        }
+      }
+    }
+
     const params = {
       page:          Number(searchParams.get('page') ?? '1'),
       pageSize:      Number(searchParams.get('pageSize') ?? '20'),
@@ -15,6 +29,7 @@ export async function GET(request: Request) {
       search:        searchParams.get('search') ?? undefined,
       minPrice:      searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
       maxPrice:      searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
+      includeAll,
     };
     const result = await propertyService.getProperties(params);
     return NextResponse.json(result, { status: 200 });
