@@ -1,6 +1,7 @@
 import React from 'react';
 import '../styles/globals.css';
 import { ThemeProvider } from '../context/ThemeContext';
+import { AuthProvider } from '../context/AuthContext';
 import { AppStateProvider } from '../context/AppStateContext';
 import { FavoritesProvider } from '../context/FavoritesContext';
 import Navbar from '../components/common/Navbar';
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es">
       <body className="flex flex-col min-h-screen bg-slate-50 dark:bg-brand-navy-900 transition-colors duration-300">
         <ThemeProvider>
+          <AuthProvider>
           <AppStateProvider>
             <FavoritesProvider>
               <Navbar />
@@ -26,6 +28,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               
             </FavoritesProvider>
           </AppStateProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

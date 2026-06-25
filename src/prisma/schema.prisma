@@ -74,3 +74,13 @@ model Favorite {
   @@unique([userId, propertyId])
   @@index([userId])
 }
+
+model Profile {
+  id        String   @id
+  email     String   @unique
+  role      String   @default("cliente")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("profiles")
+}
