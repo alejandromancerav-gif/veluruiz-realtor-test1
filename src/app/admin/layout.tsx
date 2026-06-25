@@ -34,6 +34,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             >
               {language === 'en' ? 'Visit Requests' : 'Solicitudes'}
             </Link>
+            <Link
+              href="/admin/properties"
+              className={`text-sm font-medium transition-colors ${
+                pathname.startsWith('/admin/properties')
+                  ? 'text-white'
+                  : 'text-brand-navy-300 hover:text-white'
+              }`}
+            >
+              {language === 'en' ? 'Properties' : 'Propiedades'}
+            </Link>
           </div>
           <button
             onClick={handleSignOut}

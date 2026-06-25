@@ -1,40 +1,72 @@
 // src/components/AddPropertyModal.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { PropertyApiRecord } from '@/types/property.types';
 
 interface AddPropertyModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess: () => void;
+  property?: PropertyApiRecord;
 }
 
-export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalProps) {
-  const router = useRouter();
+const DEFAULT_FORM = {
+  title: '',
+  titleEn: '',
+  description: '',
+  descriptionEn: '',
+  price: '',
+  city: 'Caracas',
+  zone: '',
+  type: 'apartment',
+  operationType: 'buy',
+  bedrooms: '',
+  bathrooms: '',
+  parkingSpaces: '',
+  squareMeters: '',
+  isPrivate: false,
+};
+
+export default function AddPropertyModal({ isOpen, onClose, onSuccess, property }: AddPropertyModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
-    title: '',
-    titleEn: '',
-    description: '',
-    descriptionEn: '',
-    price: '',
-    city: 'Caracas',
-    zone: '',
-    type: 'apartment',
-    operationType: 'buy',
-    bedrooms: '',
-    bathrooms: '',
-    parkingSpaces: '',
-    squareMeters: '',
-    isPrivate: false,
-  });
-
+  const [formData, setFormData] = useState(DEFAULT_FORM);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const amenitiesList = ['Seguridad', 'Tanque de Agua', 'Ascensor', 'Mascotas Permitidas', 'Planta Eléctrica'];
 
+  useEffect(() => {
+    if (isOpen) {
+      if (property) {
+        setFormData({
+          title:         property.title,
+          titleEn:       property.titleEn ?? '',
+          description:   property.description,
+          descriptionEn: property.descriptionEn ?? '',
+          price:         String(property.price),
+          city:          property.city,
+          zone:          property.zone,
+          type:          property.type,
+          operationType: property.operationType,
+          bedrooms:      String(property.bedrooms),
+          bathrooms:     String(property.bathrooms),
+          parkingSpaces: String(property.parkingSpaces),
+          squareMeters:  String(property.squareMeters),
+          isPrivate:     property.isPrivate,
+        });
+        setSelectedAmenities(property.amenities ?? []);
+      } else {
+        setFormData(DEFAULT_FORM);
+        setSelectedAmenities([]);
+      }
+      setError(null);
+    }
+  }, [isOpen, property?.id]);
+
   if (!isOpen) return null;
+
+  const isEdit = !!property;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -56,13 +88,15 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
     setIsLoading(true);
     setError(null);
 
-    // Si el usuario no puso traducción en inglés, usamos por defecto el valor en español
     const finalTitleEn = formData.titleEn.trim() !== '' ? formData.titleEn : formData.title;
     const finalDescriptionEn = formData.descriptionEn.trim() !== '' ? formData.descriptionEn : formData.description;
 
+    const url    = isEdit ? `/api/properties/${property.id}` : '/api/properties';
+    const method = isEdit ? 'PATCH' : 'POST';
+
     try {
-      const response = await fetch('/api/properties', {
-        method: 'POST',
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
@@ -77,27 +111,13 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
         throw new Error(resData.error || 'Error al guardar la propiedad.');
       }
 
-      // Reiniciar formulario al guardar con éxito
-      setFormData({
-        title: '',
-        titleEn: '',
-        description: '',
-        descriptionEn: '',
-        price: '',
-        city: 'Caracas',
-        zone: '',
-        type: 'apartment',
-        operationType: 'buy',
-        bedrooms: '',
-        bathrooms: '',
-        parkingSpaces: '',
-        squareMeters: '',
-        isPrivate: false,
-      });
-      setSelectedAmenities([]);
+      if (!isEdit) {
+        setFormData(DEFAULT_FORM);
+        setSelectedAmenities([]);
+      }
 
-      router.refresh();
-      onClose(); // Cerramos el modal tras guardar con éxito
+      onSuccess();
+      onClose();
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error inesperado');
     } finally {
@@ -108,22 +128,22 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
       <div className="bg-white dark:bg-brand-navy-900 rounded-2xl border border-slate-100 dark:border-brand-navy-800 p-6 shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
-        
-        {/* Botón Cerrar (X) */}
+
         <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-white text-xl font-bold p-1">
           ✕
         </button>
 
         <div className="mb-6">
-          <h1 className="text-xl font-bold text-brand-navy-900 dark:text-white">Agregar Nueva Propiedad</h1>
+          <h1 className="text-xl font-bold text-brand-navy-900 dark:text-white">
+            {isEdit ? 'Editar Propiedad' : 'Agregar Nueva Propiedad'}
+          </h1>
           <p className="text-xs text-brand-navy-400 mt-1">Ingresa los datos para guardarlos en Supabase con su respectiva traducción.</p>
         </div>
 
         {error && <div className="p-3 bg-red-100 text-red-700 text-xs rounded-lg mb-4 font-semibold">⚠️ {error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs md:text-sm">
-          
-          {/* Títulos (Español / Inglés) y Operación */}
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Título (Español) *</label>
@@ -142,7 +162,6 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
             </div>
           </div>
 
-          {/* Descripciones (Español / Inglés) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Descripción (Español) *</label>
@@ -154,7 +173,6 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
             </div>
           </div>
 
-          {/* Precio, Tipo, Ciudad, Zona */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             <div>
               <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Precio ($) *</label>
@@ -186,7 +204,6 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
             </div>
           </div>
 
-          {/* Atributos numéricos */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
               <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Habitaciones</label>
@@ -206,7 +223,6 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
             </div>
           </div>
 
-          {/* Características (Amenities) */}
           <div>
             <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-2">Características</label>
             <div className="flex flex-wrap gap-1.5">
@@ -221,19 +237,17 @@ export default function AddPropertyModal({ isOpen, onClose }: AddPropertyModalPr
             </div>
           </div>
 
-          {/* Checkbox Propiedad Privada */}
           <div className="flex items-center gap-2 pt-2">
             <input type="checkbox" id="isPrivate" checked={formData.isPrivate} onChange={handleCheckboxChange} className="w-4 h-4 text-amber-600 border-slate-200 dark:border-brand-navy-700 bg-slate-50 dark:bg-brand-navy-800 rounded outline-none cursor-pointer"/>
             <label htmlFor="isPrivate" className="text-xs font-bold text-brand-navy-400 uppercase cursor-pointer select-none">Marcar como propiedad privada / exclusiva</label>
           </div>
 
-          {/* Botones de acción */}
           <div className="pt-4 border-t border-slate-100 dark:border-brand-navy-800 flex justify-end gap-2">
             <button type="button" onClick={onClose} className="px-4 py-2 border border-slate-200 dark:border-brand-navy-700 rounded-xl text-slate-500 font-bold hover:bg-slate-50 dark:hover:bg-brand-navy-800 transition-colors uppercase text-xs">
               Cancelar
             </button>
             <button disabled={isLoading} type="submit" className="px-5 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-800 text-white font-bold rounded-xl transition-colors uppercase text-xs">
-              {isLoading ? 'Guardando...' : 'Guardar Propiedad'}
+              {isLoading ? 'Guardando...' : (isEdit ? 'Guardar Cambios' : 'Guardar Propiedad')}
             </button>
           </div>
         </form>

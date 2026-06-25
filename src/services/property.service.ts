@@ -156,4 +156,12 @@ export const propertyService = {
       data,
     });
   },
+
+  async getPropertyStats() {
+    const [active, inactive] = await Promise.all([
+      db.property.count({ where: { isActive: true } }),
+      db.property.count({ where: { isActive: false } }),
+    ]);
+    return { active, inactive, total: active + inactive };
+  },
 };
