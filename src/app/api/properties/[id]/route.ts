@@ -39,9 +39,8 @@ export async function DELETE(
   } catch (error: any) {
     // Esto mostrará el error real en tu terminal
     console.error("DEBUG: Error CRÍTICO en DELETE:", error);
-    return NextResponse.json({ 
-      error: "No se pudo eliminar",
-      details: error.message 
+    return NextResponse.json({
+      error: "No se pudo eliminar"
     }, { status: 500 });
   }
 }

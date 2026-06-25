@@ -1,6 +1,7 @@
 import { groq } from '@ai-sdk/groq';
 import { generateText } from 'ai';
 import { NextResponse } from 'next/server';
+import { propertyService } from '@/services/property.service';
 
 export async function POST(req: Request) {
   try {
@@ -9,11 +10,7 @@ export async function POST(req: Request) {
     const messages = body.messages || [];
 
     // OBTENER PROPIEDADES DEL BACKEND
-    const propertiesResponse = await fetch(
-      'http://localhost:3000/api/properties'
-    );
-
-    const properties = await propertiesResponse.json();
+    const properties = await propertyService.getAllProperties();
 
     // FORMATEAR PROPIEDADES
     const formattedProperties = properties

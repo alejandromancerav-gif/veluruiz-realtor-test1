@@ -18,6 +18,7 @@ interface CreatePropertyInput {
   parkingSpaces: number;
   squareMeters: number;
   type: string;
+  operationType: string;
   images: string[];
   amenities: string[];
 }

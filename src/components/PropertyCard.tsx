@@ -11,7 +11,7 @@ import AppointmentModal from './ScheduleModal';
 
 interface PropertyCardProps {
   property: Property;
-  onDelete: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
 export default function PropertyCard({ property, onDelete }: PropertyCardProps) {
@@ -26,7 +26,7 @@ export default function PropertyCard({ property, onDelete }: PropertyCardProps) 
     try {
       const res = await fetch(`/api/properties/${property.id}`, { method: 'DELETE' });
       if (res.ok) {
-        onDelete(property.id); 
+        onDelete?.(property.id);
       } else {
         alert(language === 'en' ? "Error deleting" : "Error al eliminar");
       }
