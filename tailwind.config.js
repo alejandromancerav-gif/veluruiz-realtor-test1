@@ -20,6 +20,7 @@ module.exports = {
             700: '#162842',
             800: '#112035',
             900: '#0b1523',
+            950: '#07101A',
           },
           accent: {
             DEFAULT: '#F06C4F', // Nuevo Naranja extraído del logo (referencia image_8.png)

@@ -12,7 +12,14 @@ import AIChatbox from '../components/AIChatBox';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t===null){document.documentElement.classList.add('dark');}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="flex flex-col min-h-screen bg-slate-50 dark:bg-brand-navy-900 transition-colors duration-300">
         <ThemeProvider>
           <AuthProvider>

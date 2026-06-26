@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { PropertyApiRecord } from '@/types/property.types';
+import { useAppState } from '@/context/AppStateContext';
 
 interface UploadSlot {
   id: string;
@@ -25,7 +26,7 @@ const DEFAULT_FORM = {
   price: '',
   city: 'Caracas',
   zone: '',
-  type: 'apartment',
+  type: 'Apartamento',
   operationType: 'buy',
   bedrooms: '',
   bathrooms: '',
@@ -34,7 +35,18 @@ const DEFAULT_FORM = {
   isPrivate: false,
 };
 
+const amenitiesList = ['Seguridad', 'Tanque de Agua', 'Ascensor', 'Mascotas Permitidas', 'Planta Eléctrica'];
+
+const amenityLabelsEn: Record<string, string> = {
+  'Seguridad':           'Security',
+  'Tanque de Agua':      'Water Tank',
+  'Ascensor':            'Elevator',
+  'Mascotas Permitidas': 'Pets Allowed',
+  'Planta Eléctrica':    'Generator',
+};
+
 export default function AddPropertyModal({ isOpen, onClose, onSuccess, property }: AddPropertyModalProps) {
+  const { language } = useAppState();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,8 +54,6 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [uploadSlots, setUploadSlots]       = useState<UploadSlot[]>([]);
-
-  const amenitiesList = ['Seguridad', 'Tanque de Agua', 'Ascensor', 'Mascotas Permitidas', 'Planta Eléctrica'];
 
   useEffect(() => {
     if (isOpen) {
@@ -99,7 +109,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    e.target.value = ''; // permite re-seleccionar el mismo archivo tras error
+    e.target.value = '';
 
     const slotId = crypto.randomUUID();
     setUploadSlots(prev => [...prev, { id: slotId, status: 'uploading' }]);
@@ -112,7 +122,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
 
       if (!res.ok) {
         setUploadSlots(prev => prev.map(s =>
-          s.id === slotId ? { ...s, status: 'error', errorMsg: data.error ?? 'Error al subir' } : s
+          s.id === slotId ? { ...s, status: 'error', errorMsg: data.error ?? (language === 'en' ? 'Upload error' : 'Error al subir') } : s
         ));
         return;
       }
@@ -120,7 +130,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
       setUploadedImages(prev => [...prev, data.url]);
     } catch {
       setUploadSlots(prev => prev.map(s =>
-        s.id === slotId ? { ...s, status: 'error', errorMsg: 'Error de conexión' } : s
+        s.id === slotId ? { ...s, status: 'error', errorMsg: language === 'en' ? 'Connection error' : 'Error de conexión' } : s
       ));
     }
   };
@@ -135,12 +145,12 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
     setError(null);
 
     if (uploadSlots.some(s => s.status === 'uploading')) {
-      setError('Espera a que terminen de subir todas las imágenes');
+      setError(language === 'en' ? 'Wait for all images to finish uploading' : 'Espera a que terminen de subir todas las imágenes');
       setIsLoading(false);
       return;
     }
     if (uploadedImages.length === 0) {
-      setError('Al menos una imagen es requerida');
+      setError(language === 'en' ? 'At least one image is required' : 'Al menos una imagen es requerida');
       setIsLoading(false);
       return;
     }
@@ -166,7 +176,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
 
       if (!response.ok) {
         const resData = await response.json();
-        throw new Error(resData.error || 'Error al guardar la propiedad.');
+        throw new Error(resData.error || (language === 'en' ? 'Error saving the property.' : 'Error al guardar la propiedad.'));
       }
 
       if (!isEdit) {
@@ -178,8 +188,8 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
 
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message || 'Ocurrió un error inesperado');
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : null) || (language === 'en' ? 'An unexpected error occurred' : 'Ocurrió un error inesperado'));
     } finally {
       setIsLoading(false);
     }
@@ -197,9 +207,15 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
 
         <div className="mb-6">
           <h1 className="text-xl font-bold text-brand-navy-900 dark:text-white">
-            {isEdit ? 'Editar Propiedad' : 'Agregar Nueva Propiedad'}
+            {isEdit
+              ? (language === 'en' ? 'Edit Property' : 'Editar Propiedad')
+              : (language === 'en' ? 'Add New Property' : 'Agregar Nueva Propiedad')}
           </h1>
-          <p className="text-xs text-brand-navy-400 mt-1">Ingresa los datos para guardarlos en Supabase con su respectiva traducción.</p>
+          <p className="text-xs text-brand-navy-400 mt-1">
+            {language === 'en'
+              ? 'Enter the property details to store them with their respective translation.'
+              : 'Ingresa los datos para guardarlos en Supabase con su respectiva traducción.'}
+          </p>
         </div>
 
         {error && <div className="p-3 bg-red-100 text-red-700 text-xs rounded-lg mb-4 font-semibold">⚠️ {error}</div>}
@@ -208,52 +224,68 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Título (Español) *</label>
+              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">
+                {language === 'en' ? 'Title (Spanish) *' : 'Título (Español) *'}
+              </label>
               <input required type="text" name="title" value={formData.title} onChange={handleChange} className="w-full p-2 rounded-lg border bg-slate-50 dark:bg-brand-navy-800 text-brand-navy-900 dark:text-white border-slate-200 dark:border-brand-navy-700 outline-none"/>
             </div>
             <div>
-              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Título (Inglés)</label>
+              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">
+                {language === 'en' ? 'Title (English)' : 'Título (Inglés)'}
+              </label>
               <input type="text" name="titleEn" placeholder="Ej: House in La Lagunita" value={formData.titleEn} onChange={handleChange} className="w-full p-2 rounded-lg border bg-slate-50 dark:bg-brand-navy-800 text-brand-navy-900 dark:text-white border-slate-200 dark:border-brand-navy-700 outline-none"/>
             </div>
             <div>
-              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Operación *</label>
+              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">
+                {language === 'en' ? 'Operation *' : 'Operación *'}
+              </label>
               <select name="operationType" value={formData.operationType} onChange={handleChange} className="w-full p-2 rounded-lg border bg-slate-50 dark:bg-brand-navy-800 text-brand-navy-900 dark:text-white border-slate-200 dark:border-brand-navy-700 outline-none">
-                <option value="buy">Venta</option>
-                <option value="rent">Alquiler</option>
+                <option value="buy">{language === 'en' ? 'Sale' : 'Venta'}</option>
+                <option value="rent">{language === 'en' ? 'Rent' : 'Alquiler'}</option>
               </select>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Descripción (Español) *</label>
+              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">
+                {language === 'en' ? 'Description (Spanish) *' : 'Descripción (Español) *'}
+              </label>
               <textarea required rows={3} name="description" value={formData.description} onChange={handleChange} className="w-full p-2 rounded-lg border bg-slate-50 dark:bg-brand-navy-800 text-brand-navy-900 dark:text-white border-slate-200 dark:border-brand-navy-700 outline-none resize-none"/>
             </div>
             <div>
-              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Descripción (Inglés)</label>
+              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">
+                {language === 'en' ? 'Description (English)' : 'Descripción (Inglés)'}
+              </label>
               <textarea rows={3} name="descriptionEn" placeholder="Ej: Beautiful house with the best view..." value={formData.descriptionEn} onChange={handleChange} className="w-full p-2 rounded-lg border bg-slate-50 dark:bg-brand-navy-800 text-brand-navy-900 dark:text-white border-slate-200 dark:border-brand-navy-700 outline-none resize-none"/>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             <div>
-              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Precio ($) *</label>
+              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">
+                {language === 'en' ? 'Price ($) *' : 'Precio ($) *'}
+              </label>
               <input required type="number" name="price" value={formData.price} onChange={handleChange} className="w-full p-2 rounded-lg border bg-slate-50 dark:bg-brand-navy-800 text-brand-navy-900 dark:text-white border-slate-200 dark:border-brand-navy-700 outline-none"/>
             </div>
             <div>
-              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Tipo Inmueble *</label>
+              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">
+                {language === 'en' ? 'Property Type *' : 'Tipo Inmueble *'}
+              </label>
               <select name="type" value={formData.type} onChange={handleChange} className="w-full p-2 rounded-lg border bg-slate-50 dark:bg-brand-navy-800 text-brand-navy-900 dark:text-white border-slate-200 dark:border-brand-navy-700 outline-none">
-                <option value="apartment">Apartamento</option>
-                <option value="house">Casa</option>
-                <option value="land">Terreno</option>
-                <option value="office">Oficina</option>
-                <option value="commercial">Local</option>
-                <option value="penthouse">Penthouse</option>
-                <option value="warehouse">Galpón</option>
+                <option value="Apartamento">{language === 'en' ? 'Apartment'         : 'Apartamento'}</option>
+                <option value="Casa">       {language === 'en' ? 'House'             : 'Casa'}</option>
+                <option value="Terreno">    {language === 'en' ? 'Land'              : 'Terreno'}</option>
+                <option value="Oficina">    {language === 'en' ? 'Office'            : 'Oficina'}</option>
+                <option value="Local Comercial">{language === 'en' ? 'Commercial Space' : 'Local Comercial'}</option>
+                <option value="Penthouse">  Penthouse</option>
+                <option value="Galpón">     {language === 'en' ? 'Warehouse'         : 'Galpón'}</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Ciudad *</label>
+              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">
+                {language === 'en' ? 'City *' : 'Ciudad *'}
+              </label>
               <select name="city" value={formData.city} onChange={handleChange} className="w-full p-2 rounded-lg border bg-slate-50 dark:bg-brand-navy-800 text-brand-navy-900 dark:text-white border-slate-200 dark:border-brand-navy-700 outline-none">
                 <option value="Caracas">Caracas</option>
                 <option value="Valencia">Valencia</option>
@@ -261,38 +293,51 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Zona / Urbanización *</label>
+              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">
+                {language === 'en' ? 'Zone / Neighborhood *' : 'Zona / Urbanización *'}
+              </label>
               <input required type="text" name="zone" placeholder="Ej: Las Mercedes" value={formData.zone} onChange={handleChange} className="w-full p-2 rounded-lg border bg-slate-50 dark:bg-brand-navy-800 text-brand-navy-900 dark:text-white border-slate-200 dark:border-brand-navy-700 outline-none"/>
             </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
-              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Habitaciones</label>
+              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">
+                {language === 'en' ? 'Bedrooms' : 'Habitaciones'}
+              </label>
               <input type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange} className="w-full p-2 rounded-lg border bg-slate-50 dark:bg-brand-navy-800 text-brand-navy-900 dark:text-white border-slate-200 dark:border-brand-navy-700 outline-none"/>
             </div>
             <div>
-              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Baños</label>
+              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">
+                {language === 'en' ? 'Bathrooms' : 'Baños'}
+              </label>
               <input type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange} className="w-full p-2 rounded-lg border bg-slate-50 dark:bg-brand-navy-800 text-brand-navy-900 dark:text-white border-slate-200 dark:border-brand-navy-700 outline-none"/>
             </div>
             <div>
-              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Puestos Estac.</label>
+              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">
+                {language === 'en' ? 'Parking' : 'Puestos Estac.'}
+              </label>
               <input type="number" name="parkingSpaces" value={formData.parkingSpaces} onChange={handleChange} className="w-full p-2 rounded-lg border bg-slate-50 dark:bg-brand-navy-800 text-brand-navy-900 dark:text-white border-slate-200 dark:border-brand-navy-700 outline-none"/>
             </div>
             <div>
-              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">Área Mts²</label>
+              <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-1">
+                {language === 'en' ? 'Area Sqm' : 'Área Mts²'}
+              </label>
               <input type="number" name="squareMeters" value={formData.squareMeters} onChange={handleChange} className="w-full p-2 rounded-lg border bg-slate-50 dark:bg-brand-navy-800 text-brand-navy-900 dark:text-white border-slate-200 dark:border-brand-navy-700 outline-none"/>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-2">Características</label>
+            <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-2">
+              {language === 'en' ? 'Amenities' : 'Características'}
+            </label>
             <div className="flex flex-wrap gap-1.5">
               {amenitiesList.map((amenity) => {
                 const isSelected = selectedAmenities.includes(amenity);
+                const label = language === 'en' ? (amenityLabelsEn[amenity] ?? amenity) : amenity;
                 return (
                   <button type="button" key={amenity} onClick={() => handleAmenityToggle(amenity)} className={`px-2.5 py-1 rounded-lg font-semibold text-xs border transition-colors ${isSelected ? 'bg-amber-600 border-amber-600 text-white' : 'bg-slate-50 dark:bg-brand-navy-800 border-slate-200 dark:border-brand-navy-700 text-brand-navy-900 dark:text-slate-300'}`}>
-                    {amenity}
+                    {label}
                   </button>
                 );
               })}
@@ -300,7 +345,9 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-2">Imágenes *</label>
+            <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-2">
+              {language === 'en' ? 'Images *' : 'Imágenes *'}
+            </label>
 
             {(uploadedImages.length > 0 || uploadSlots.length > 0) && (
               <div className="flex flex-wrap gap-2 mb-3">
@@ -317,11 +364,15 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
                 {uploadSlots.map((slot) => (
                   <div key={slot.id} className="w-20 h-20 rounded-lg border border-slate-200 dark:border-brand-navy-700 flex-shrink-0 flex items-center justify-center bg-slate-50 dark:bg-brand-navy-800 p-1">
                     {slot.status === 'uploading' ? (
-                      <span className="text-[10px] text-slate-400 text-center">Subiendo...</span>
+                      <span className="text-[10px] text-slate-400 text-center">
+                        {language === 'en' ? 'Uploading...' : 'Subiendo...'}
+                      </span>
                     ) : (
                       <div className="text-center">
                         <span className="text-[10px] text-red-500 block leading-tight">{slot.errorMsg}</span>
-                        <button type="button" onClick={() => handleDismissError(slot.id)} className="text-[10px] text-slate-400 hover:text-slate-600 mt-0.5">Cerrar</button>
+                        <button type="button" onClick={() => handleDismissError(slot.id)} className="text-[10px] text-slate-400 hover:text-slate-600 mt-0.5">
+                          {language === 'en' ? 'Dismiss' : 'Cerrar'}
+                        </button>
                       </div>
                     )}
                   </div>
@@ -330,22 +381,28 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
             )}
 
             <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-brand-navy-700 text-xs font-semibold text-brand-navy-900 dark:text-slate-300 bg-slate-50 dark:bg-brand-navy-800 hover:bg-slate-100 dark:hover:bg-brand-navy-700 cursor-pointer transition-colors">
-              + Agregar imagen
+              {language === 'en' ? '+ Add image' : '+ Agregar imagen'}
               <input type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
             </label>
           </div>
 
           <div className="flex items-center gap-2 pt-2">
             <input type="checkbox" id="isPrivate" checked={formData.isPrivate} onChange={handleCheckboxChange} className="w-4 h-4 text-amber-600 border-slate-200 dark:border-brand-navy-700 bg-slate-50 dark:bg-brand-navy-800 rounded outline-none cursor-pointer"/>
-            <label htmlFor="isPrivate" className="text-xs font-bold text-brand-navy-400 uppercase cursor-pointer select-none">Marcar como propiedad privada / exclusiva</label>
+            <label htmlFor="isPrivate" className="text-xs font-bold text-brand-navy-400 uppercase cursor-pointer select-none">
+              {language === 'en' ? 'Mark as private / exclusive listing' : 'Marcar como propiedad privada / exclusiva'}
+            </label>
           </div>
 
           <div className="pt-4 border-t border-slate-100 dark:border-brand-navy-800 flex justify-end gap-2">
             <button type="button" onClick={onClose} className="px-4 py-2 border border-slate-200 dark:border-brand-navy-700 rounded-xl text-slate-500 font-bold hover:bg-slate-50 dark:hover:bg-brand-navy-800 transition-colors uppercase text-xs">
-              Cancelar
+              {language === 'en' ? 'Cancel' : 'Cancelar'}
             </button>
             <button disabled={isSubmitDisabled} type="submit" className="px-5 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-800 text-white font-bold rounded-xl transition-colors uppercase text-xs">
-              {isLoading ? 'Guardando...' : (isEdit ? 'Guardar Cambios' : 'Guardar Propiedad')}
+              {isLoading
+                ? (language === 'en' ? 'Saving...' : 'Guardando...')
+                : isEdit
+                  ? (language === 'en' ? 'Save Changes' : 'Guardar Cambios')
+                  : (language === 'en' ? 'Save Property' : 'Guardar Propiedad')}
             </button>
           </div>
         </form>

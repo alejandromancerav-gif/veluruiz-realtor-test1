@@ -85,7 +85,7 @@ export default function Navbar() {
             <button
               onClick={toggleTheme}
               className="p-2 rounded-full text-brand-navy-200 hover:text-white text-lg transition-colors"
-              aria-label="Cambiar Tema"
+              aria-label={language === 'en' ? 'Toggle Theme' : 'Cambiar Tema'}
             >
               {theme === 'light' ? '🌙' : '☀️'}
             </button>

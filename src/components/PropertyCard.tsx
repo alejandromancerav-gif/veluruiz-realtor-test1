@@ -75,9 +75,9 @@ export default function PropertyCard({ property, onDelete }: PropertyCardProps) 
         </p>
         
         <div className="grid grid-cols-4 gap-2 text-center text-xs text-slate-600 dark:text-slate-400 mb-4 border-y border-slate-100 dark:border-brand-navy-800 py-3">
-            <div><span className="block font-bold text-base text-brand-navy-900 dark:text-white">{property.bedrooms ?? 0}</span> Hab</div>
-            <div><span className="block font-bold text-base text-brand-navy-900 dark:text-white">{property.bathrooms}</span> Baños</div>
-            <div><span className="block font-bold text-base text-brand-navy-900 dark:text-white">{property.parkingSpaces}</span> Puesto</div>
+            <div><span className="block font-bold text-base text-brand-navy-900 dark:text-white">{property.bedrooms ?? 0}</span> {language === 'en' ? 'Bed' : 'Hab'}</div>
+            <div><span className="block font-bold text-base text-brand-navy-900 dark:text-white">{property.bathrooms}</span> {language === 'en' ? 'Bath' : 'Baños'}</div>
+            <div><span className="block font-bold text-base text-brand-navy-900 dark:text-white">{property.parkingSpaces}</span> {language === 'en' ? 'Spot' : 'Puesto'}</div>
             <div><span className="block font-bold text-base text-brand-navy-900 dark:text-white">{property.squareMeters}</span> m²</div>
         </div>
 

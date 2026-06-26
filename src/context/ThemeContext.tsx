@@ -8,13 +8,20 @@ interface ThemeContextType {
   toggleTheme: () => void;
 }
 
+const THEME_KEY = 'theme';
+
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // Iniciamos siempre en 'light' por defecto a primera plana
-  const [theme, setTheme] = useState<Theme>('light');
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return 'dark';
+    try {
+      return (localStorage.getItem(THEME_KEY) as Theme) ?? 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
 
-  // Este efecto le avisa a TODO el proyecto (incluyendo Tailwind) en qué modo estamos
   useEffect(() => {
     const root = window.document.documentElement;
     if (theme === 'dark') {
@@ -22,6 +29,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } else {
       root.classList.remove('dark');
     }
+    try { localStorage.setItem(THEME_KEY, theme); } catch {}
   }, [theme]);
 
   const toggleTheme = () => {

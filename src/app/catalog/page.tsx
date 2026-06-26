@@ -98,25 +98,25 @@ export default function CatalogPage() {
               {language === 'en' ? 'Filters' : 'Filtros'}
             </h3>
 
-            <select className="w-full p-2 border rounded-lg text-sm dark:bg-brand-navy-800 dark:text-white" onChange={(e) => setOperationType(e.target.value)}>
+            <select className="w-full p-2 border border-slate-200 dark:border-brand-navy-700 rounded-lg text-sm dark:bg-brand-navy-800 dark:text-white" onChange={(e) => setOperationType(e.target.value)}>
               <option value="all">{language === 'en' ? 'All Operations' : 'Todas las operaciones'}</option>
               <option value="buy">{language === 'en' ? 'Buy' : 'Venta'}</option>
               <option value="rent">{language === 'en' ? 'Rent' : 'Alquiler'}</option>
             </select>
 
-            <select className="w-full p-2 border rounded-lg text-sm dark:bg-brand-navy-800 dark:text-white" onChange={(e) => setPropertyType(e.target.value)}>
+            <select className="w-full p-2 border border-slate-200 dark:border-brand-navy-700 rounded-lg text-sm dark:bg-brand-navy-800 dark:text-white" onChange={(e) => setPropertyType(e.target.value)}>
               <option value="all">{language === 'en' ? 'All Types' : 'Todos los tipos'}</option>
               {facets.types.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
 
-            <select className="w-full p-2 border rounded-lg text-sm dark:bg-brand-navy-800 dark:text-white" onChange={(e) => setCity(e.target.value)}>
+            <select className="w-full p-2 border border-slate-200 dark:border-brand-navy-700 rounded-lg text-sm dark:bg-brand-navy-800 dark:text-white" onChange={(e) => setCity(e.target.value)}>
               <option value="all">{language === 'en' ? 'All Cities' : 'Todas las ciudades'}</option>
               {facets.cities.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
 
             <div className="flex gap-2">
-              <input type="number" placeholder="Min $" className="w-1/2 p-2 border rounded-lg text-sm dark:bg-brand-navy-800 dark:text-white" onChange={(e) => setMinPrice(e.target.value)} />
-              <input type="number" placeholder="Max $" className="w-1/2 p-2 border rounded-lg text-sm dark:bg-brand-navy-800 dark:text-white" onChange={(e) => setMaxPrice(e.target.value)} />
+              <input type="number" placeholder="Min $" className="w-1/2 p-2 border border-slate-200 dark:border-brand-navy-700 rounded-lg text-sm dark:bg-brand-navy-800 dark:text-white" onChange={(e) => setMinPrice(e.target.value)} />
+              <input type="number" placeholder="Max $" className="w-1/2 p-2 border border-slate-200 dark:border-brand-navy-700 rounded-lg text-sm dark:bg-brand-navy-800 dark:text-white" onChange={(e) => setMaxPrice(e.target.value)} />
             </div>
 
           </aside>
@@ -126,7 +126,7 @@ export default function CatalogPage() {
               <input
                 type="text"
                 placeholder={language === 'en' ? "Search by zone or title..." : "Buscar por zona o título..."}
-                className="w-full p-3 border rounded-xl dark:bg-brand-navy-800 dark:text-white text-sm shadow-sm"
+                className="w-full p-3 border border-slate-200 dark:border-brand-navy-700 rounded-xl dark:bg-brand-navy-800 dark:text-white text-sm shadow-sm"
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>

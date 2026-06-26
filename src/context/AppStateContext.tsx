@@ -8,10 +8,24 @@ interface AppStateContextType {
   setLanguage: (lang: Language) => void;
 }
 
+const LANGUAGE_KEY = 'language';
+
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('es'); // Por defecto en español
+  const [language, setLanguageState] = useState<Language>(() => {
+    if (typeof window === 'undefined') return 'en';
+    try {
+      return (localStorage.getItem(LANGUAGE_KEY) as Language) ?? 'en';
+    } catch {
+      return 'en';
+    }
+  });
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    try { localStorage.setItem(LANGUAGE_KEY, lang); } catch {}
+  };
 
   return (
     <AppStateContext.Provider value={{ language, setLanguage }}>

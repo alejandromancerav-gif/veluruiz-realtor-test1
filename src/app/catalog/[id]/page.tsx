@@ -139,7 +139,7 @@ export default function PropertyDetailPage() {
 
           {/* DETALLES DE CABECERA */}
           <div className="space-y-1">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-orange-500">
+            <span className="text-[10px] uppercase font-bold tracking-wider text-orange-500 dark:text-orange-400">
               {translateType(property.type || 'Apartment')}
             </span>
             <div className="flex justify-between items-start gap-4">

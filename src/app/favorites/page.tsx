@@ -21,7 +21,7 @@ export default function FavoritesPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-brand-navy-900 py-12">
       <div className="max-w-7xl mx-auto px-4">
         <h1 className="text-3xl font-extrabold text-brand-navy-900 dark:text-white mb-8">
-          {language === 'es' ? 'Mis Favoritos' : 'My Favorites'}
+          {language === 'en' ? 'My Favorites' : 'Mis Favoritos'}
         </h1>
         
         {favoriteItems.length > 0 ? (
@@ -31,8 +31,8 @@ export default function FavoritesPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 text-gray-500">
-            {language === 'es' ? 'No tienes favoritos aún.' : 'No favorites yet.'}
+          <div className="text-center py-20 text-gray-500 dark:text-slate-400">
+            {language === 'en' ? 'No favorites yet.' : 'No tienes favoritos aún.'}
           </div>
         )}
       </div>

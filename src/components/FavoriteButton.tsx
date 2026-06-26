@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useFavorites } from '../context/FavoritesContext';
+import { useAppState } from '../context/AppStateContext';
 
 interface FavoriteButtonProps {
   propertyId: string;
@@ -10,6 +11,7 @@ interface FavoriteButtonProps {
 
 export default function FavoriteButton({ propertyId, className = '' }: FavoriteButtonProps) {
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { language } = useAppState();
   const active = isFavorite(propertyId);
 
   return (
@@ -20,7 +22,9 @@ export default function FavoriteButton({ propertyId, className = '' }: FavoriteB
         toggleFavorite(propertyId);
       }}
       className={`group flex items-center justify-center p-3 rounded-full border border-slate-200 dark:border-brand-navy-700 bg-white dark:bg-brand-navy-800 shadow-sm transition-all duration-300 hover:scale-105 active:scale-95 ${className}`}
-      aria-label={active ? "Remove from favorites" : "Add to favorites"}
+      aria-label={active
+        ? (language === 'en' ? 'Remove from favorites' : 'Eliminar de favoritos')
+        : (language === 'en' ? 'Add to favorites' : 'Agregar a favoritos')}
     >
       <svg
         className={`w-6 h-6 transition-all duration-300 transform group-hover:scale-110 ${

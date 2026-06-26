@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useAppState } from '@/context/AppStateContext';
 
 interface GalleryProps {
   images: string[];
@@ -8,13 +9,13 @@ interface GalleryProps {
 }
 
 export default function PropertyGallery({ images, title }: GalleryProps) {
+  const { language } = useAppState();
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Verificación de seguridad básica
   if (!images || images.length === 0) {
     return (
       <div className="w-full h-[450px] bg-slate-200 dark:bg-slate-800 rounded-3xl flex items-center justify-center text-slate-400">
-        No hay imágenes disponibles
+        {language === 'en' ? 'No images available' : 'No hay imágenes disponibles'}
       </div>
     );
   }

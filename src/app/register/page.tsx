@@ -1,16 +1,22 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
+import { useAppState } from '@/context/AppStateContext';
 
 export default function RegisterPage() {
   const { signInWithGoogle } = useAuth();
+  const { language } = useAppState();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-brand-navy-900">
       <div className="bg-white dark:bg-brand-navy-800 rounded-2xl shadow-xl p-10 w-full max-w-sm flex flex-col items-center gap-6">
-        <h1 className="text-2xl font-extrabold text-brand-navy-900 dark:text-white">Crear cuenta</h1>
+        <h1 className="text-2xl font-extrabold text-brand-navy-900 dark:text-white">
+          {language === 'en' ? 'Create Account' : 'Crear cuenta'}
+        </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
-          Regístrate para acceder a propiedades exclusivas y solicitar visitas.
+          {language === 'en'
+            ? 'Register to access exclusive listings and request property visits.'
+            : 'Regístrate para acceder a propiedades exclusivas y solicitar visitas.'}
         </p>
         <button
           onClick={() => signInWithGoogle()}
@@ -22,7 +28,7 @@ export default function RegisterPage() {
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
           </svg>
-          Continuar con Google
+          {language === 'en' ? 'Continue with Google' : 'Continuar con Google'}
         </button>
       </div>
     </div>
