@@ -1,9 +1,19 @@
 'use client';
 
 import { useAuth } from '@/context/AuthContext';
+import { useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
   const { signInWithGoogle } = useAuth();
+  const searchParams = useSearchParams();
+
+  const handleLogin = () => {
+    const next = searchParams.get('next');
+    const callbackUrl = next
+      ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`
+      : undefined;
+    signInWithGoogle(callbackUrl);
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-brand-navy-900">
@@ -13,7 +23,7 @@ export default function LoginPage() {
           Accede a tu cuenta para ver propiedades exclusivas y gestionar tus citas.
         </p>
         <button
-          onClick={signInWithGoogle}
+          onClick={handleLogin}
           className="w-full flex items-center justify-center gap-3 py-3 px-5 rounded-xl border border-slate-200 dark:border-brand-navy-700 hover:bg-slate-50 dark:hover:bg-brand-navy-700 font-semibold text-sm transition-all duration-200"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

@@ -5,12 +5,15 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
 import { useAppState } from '../../context/AppStateContext';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage } = useAppState();
+  const { user } = useAuth();
+  const portalHref = user ? '/client' : '/login?next=/client';
 
   const navLinks = [
     { name: language === 'en' ? 'Home' : 'Inicio', href: '/' },
@@ -88,8 +91,8 @@ export default function Navbar() {
             </button>
 
             {/* Botón destacado con el nuevo Naranja de marca */}
-            <Link 
-              href="/login" 
+            <Link
+              href={portalHref}
               className="bg-brand-accent hover:bg-brand-accent-hover text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition shadow-md"
             >
               {language === 'en' ? 'Client Portal' : 'Portal Cliente'}
@@ -144,7 +147,7 @@ export default function Navbar() {
                   Idioma: {language.toUpperCase()}
                 </button>
                 <Link
-                  href="/login"
+                  href={portalHref}
                   onClick={() => setIsOpen(false)}
                   className="bg-brand-accent text-white px-4 py-2 rounded-md text-sm font-medium"
                 >

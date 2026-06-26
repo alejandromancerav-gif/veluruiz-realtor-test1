@@ -13,7 +13,7 @@ export default function RegisterPage() {
           Regístrate para acceder a propiedades exclusivas y solicitar visitas.
         </p>
         <button
-          onClick={signInWithGoogle}
+          onClick={() => signInWithGoogle()}
           className="w-full flex items-center justify-center gap-3 py-3 px-5 rounded-xl border border-slate-200 dark:border-brand-navy-700 hover:bg-slate-50 dark:hover:bg-brand-navy-700 font-semibold text-sm transition-all duration-200"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

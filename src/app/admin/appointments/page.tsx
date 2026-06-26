@@ -24,8 +24,10 @@ interface Meta {
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  pending:   'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
-  scheduled: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
+  pending:          'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+  scheduled:        'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
+  pending_approval: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+  denied:           'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 };
 
 function statusBadgeClass(status: string) {
@@ -47,6 +49,8 @@ export default function AppointmentsPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError]               = useState<string | null>(null);
   const [page, setPage]                 = useState(1);
+  const [isUpdatingId, setIsUpdatingId] = useState<string | null>(null);
+  const [actionError, setActionError]   = useState<string | null>(null);
 
   const fetchAppointments = async ({ pg = 1, reset = false }: { pg?: number; reset?: boolean } = {}) => {
     if (reset) setIsLoading(true);
@@ -72,6 +76,24 @@ export default function AppointmentsPage() {
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
+    }
+  };
+
+  const handleUpdateStatus = async (appt: AppointmentRow, newStatus: string) => {
+    setIsUpdatingId(appt.id);
+    setActionError(null);
+    try {
+      const res = await fetch(`/api/appointments/${appt.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) throw new Error();
+      fetchAppointments({ pg: 1, reset: true });
+    } catch {
+      setActionError(language === 'en' ? 'Could not update status.' : 'No se pudo actualizar el estado.');
+    } finally {
+      setIsUpdatingId(null);
     }
   };
 
@@ -111,6 +133,12 @@ export default function AppointmentsPage() {
         )}
       </div>
 
+      {actionError && (
+        <div className="p-3 bg-red-100 text-red-700 text-xs rounded-lg font-semibold">
+          ⚠️ {actionError}
+        </div>
+      )}
+
       {appointments.length === 0 ? (
         <div className="text-center py-24 text-sm text-slate-400 dark:text-slate-500">
           {language === 'en' ? 'No visit requests yet.' : 'Aún no hay solicitudes de visita.'}
@@ -138,6 +166,9 @@ export default function AppointmentsPage() {
                   </th>
                   <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     {language === 'en' ? 'Status' : 'Estado'}
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    {language === 'en' ? 'Actions' : 'Acciones'}
                   </th>
                 </tr>
               </thead>
@@ -176,6 +207,27 @@ export default function AppointmentsPage() {
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusBadgeClass(appt.status)}`}>
                         {appt.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {appt.status === 'pending_approval' && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleUpdateStatus(appt, 'pending')}
+                            disabled={isUpdatingId === appt.id}
+                            className="text-xs font-semibold text-emerald-600 hover:underline disabled:opacity-40"
+                          >
+                            {isUpdatingId === appt.id ? '...' : (language === 'en' ? 'Approve' : 'Aprobar')}
+                          </button>
+                          <span className="text-slate-300 dark:text-slate-600">·</span>
+                          <button
+                            onClick={() => handleUpdateStatus(appt, 'denied')}
+                            disabled={isUpdatingId === appt.id}
+                            className="text-xs font-semibold text-red-500 hover:underline disabled:opacity-40"
+                          >
+                            {isUpdatingId === appt.id ? '...' : (language === 'en' ? 'Deny' : 'Denegar')}
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
