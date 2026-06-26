@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 export const appointmentService = {
   async createAppointment(data: {
     propertyId?: string | null;
+    clientId?: string | null;
     clientName: string;
     clientEmail: string;
     clientPhone: string;
@@ -24,6 +25,9 @@ export const appointmentService = {
 
     if (data.propertyId) {
       createPayload.property = { connect: { id: data.propertyId } };
+    }
+    if (data.clientId) {
+      createPayload.profile = { connect: { id: data.clientId } };
     }
 
     return await db.appointment.create({

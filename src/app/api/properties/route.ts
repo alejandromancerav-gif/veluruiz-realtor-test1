@@ -7,15 +7,22 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
 
-    let includeAll = false;
-    if (searchParams.get('includeAll') === 'true') {
+    let includeAll  = false;
+    let onlyPrivate = false;
+    const wantsIncludeAll  = searchParams.get('includeAll')  === 'true';
+    const wantsOnlyPrivate = searchParams.get('onlyPrivate') === 'true';
+
+    if (wantsIncludeAll || wantsOnlyPrivate) {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: profile } = await supabase
-          .from('profiles').select('role').eq('id', user.id).single();
-        if (profile?.role === 'empleado') {
-          includeAll = true;
+        if (wantsIncludeAll) {
+          const { data: profile } = await supabase
+            .from('profiles').select('role').eq('id', user.id).single();
+          if (profile?.role === 'empleado') includeAll = true;
+        }
+        if (!includeAll && wantsOnlyPrivate) {
+          onlyPrivate = true;
         }
       }
     }
@@ -30,6 +37,7 @@ export async function GET(request: Request) {
       minPrice:      searchParams.get('minPrice') ? Number(searchParams.get('minPrice')) : undefined,
       maxPrice:      searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined,
       includeAll,
+      onlyPrivate,
     };
     const result = await propertyService.getProperties(params);
     return NextResponse.json(result, { status: 200 });

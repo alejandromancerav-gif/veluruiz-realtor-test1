@@ -57,6 +57,7 @@ export const propertyService = {
     minPrice?: number;
     maxPrice?: number;
     includeAll?: boolean;
+    onlyPrivate?: boolean;
   }) {
     try {
       const page = params.page ?? 1;
@@ -64,7 +65,11 @@ export const propertyService = {
       const skip = (page - 1) * pageSize;
 
       const where = {
-        ...(!params.includeAll && { isActive: true, isPrivate: false }),
+        ...(params.includeAll
+          ? {}
+          : params.onlyPrivate
+            ? { isPrivate: true, isActive: true }
+            : { isPrivate: false, isActive: true }),
         ...(params.operationType && params.operationType !== 'all' && { operationType: params.operationType }),
         ...(params.type         && params.type         !== 'all' && { type:          params.type }),
         ...(params.city         && params.city          !== 'all' && { city:          params.city }),

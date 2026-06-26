@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { appointmentService } from '@/services/appointment.services';
+import { propertyService } from '@/services/property.service';
 import { appointmentSchema } from '@/lib/validations/appointment';
 import { createClient } from '@/lib/supabase/server';
 
@@ -57,9 +58,32 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    let status   = 'pending';
+    let clientId: string | null = null;
+
+    if (parsed.data.propertyId) {
+      const property = await propertyService.getPropertyById(parsed.data.propertyId, true);
+      if (!property || !property.isActive) {
+        return NextResponse.json({ error: 'Propiedad no encontrada' }, { status: 404 });
+      }
+      if (property.isPrivate) {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          return NextResponse.json(
+            { error: 'Inicia sesión para solicitar una visita a esta propiedad' },
+            { status: 401 }
+          );
+        }
+        clientId = user.id;
+        status   = 'pending_approval';
+      }
+    }
+
     const appointment = await appointmentService.createAppointment({
       ...parsed.data,
-      status: 'pending',
+      clientId,
+      status,
     });
     return NextResponse.json(appointment, { status: 201 });
   } catch (error) {

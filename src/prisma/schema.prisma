@@ -49,20 +49,21 @@ model Property {
 model Appointment {
   id            String   @id @default(uuid())
   propertyId    String?
+  clientId      String?
   clientName    String   @default("Sin nombre")
   clientEmail   String
   clientPhone   String   @default("0000000000")
   preferredDate DateTime
   notes         String?  @db.Text
-  
   calendlyUri   String?
   status        String   @default("scheduled")
-  
   createdAt     DateTime @default(now())
 
   property      Property? @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  profile       Profile?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
 
   @@index([propertyId])
+  @@index([clientId])
 }
 
 model Favorite {
@@ -78,11 +79,12 @@ model Favorite {
 }
 
 model Profile {
-  id        String   @id
-  email     String   @unique
-  role      String   @default("cliente")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String        @id
+  email        String        @unique
+  role         String        @default("cliente")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  appointments Appointment[]
 
   @@map("profiles")
 }
