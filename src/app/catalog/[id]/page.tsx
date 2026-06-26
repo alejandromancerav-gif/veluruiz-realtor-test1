@@ -123,21 +123,15 @@ export default function PropertyDetailPage() {
     return translations[amenity] || amenity;
   };
 
-  const temporaryPicsumImages = [
-    `https://picsum.photos/800/600?random=${property.id}-img1`,
-    `https://picsum.photos/800/600?random=${property.id}-img2`,
-    `https://picsum.photos/800/600?random=${property.id}-img3`
-  ];
-
   return (
     <div className="bg-slate-50 dark:bg-brand-navy-900 min-h-screen py-6 transition-colors duration-300">
       <div className="max-w-4xl mx-auto px-4">
-        
+
         <div className="bg-white dark:bg-brand-navy-900 rounded-2xl overflow-hidden border border-slate-100 dark:border-brand-navy-800 shadow-sm p-6 space-y-6 transition-colors duration-300">
-          
+
           {/* GALERÍA DE IMÁGENES */}
           <div className="relative rounded-xl overflow-hidden">
-            <PropertyGallery images={temporaryPicsumImages} title={title} />
+            <PropertyGallery images={property.images} title={title} />
             <div className="absolute top-4 right-4 z-10">
               <FavoriteButton propertyId={property.id} />
             </div>

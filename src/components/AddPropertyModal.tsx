@@ -4,6 +4,12 @@
 import React, { useState, useEffect } from 'react';
 import { PropertyApiRecord } from '@/types/property.types';
 
+interface UploadSlot {
+  id: string;
+  status: 'uploading' | 'error';
+  errorMsg?: string;
+}
+
 interface AddPropertyModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -34,6 +40,9 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
 
   const [formData, setFormData] = useState(DEFAULT_FORM);
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [uploadSlots, setUploadSlots]       = useState<UploadSlot[]>([]);
+
   const amenitiesList = ['Seguridad', 'Tanque de Agua', 'Ascensor', 'Mascotas Permitidas', 'Planta Eléctrica'];
 
   useEffect(() => {
@@ -56,9 +65,13 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
           isPrivate:     property.isPrivate,
         });
         setSelectedAmenities(property.amenities ?? []);
+        setUploadedImages(property.images ?? []);
+        setUploadSlots([]);
       } else {
         setFormData(DEFAULT_FORM);
         setSelectedAmenities([]);
+        setUploadedImages([]);
+        setUploadSlots([]);
       }
       setError(null);
     }
@@ -83,10 +96,54 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
     );
   };
 
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = ''; // permite re-seleccionar el mismo archivo tras error
+
+    const slotId = crypto.randomUUID();
+    setUploadSlots(prev => [...prev, { id: slotId, status: 'uploading' }]);
+
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res  = await fetch('/api/properties/upload', { method: 'POST', body: fd });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setUploadSlots(prev => prev.map(s =>
+          s.id === slotId ? { ...s, status: 'error', errorMsg: data.error ?? 'Error al subir' } : s
+        ));
+        return;
+      }
+      setUploadSlots(prev => prev.filter(s => s.id !== slotId));
+      setUploadedImages(prev => [...prev, data.url]);
+    } catch {
+      setUploadSlots(prev => prev.map(s =>
+        s.id === slotId ? { ...s, status: 'error', errorMsg: 'Error de conexión' } : s
+      ));
+    }
+  };
+
+  const handleRemoveImage  = (url: string)    => setUploadedImages(prev => prev.filter(u => u !== url));
+  // El archivo queda como huérfano en Supabase Storage — cleanup pendiente en Lote 7
+  const handleDismissError = (slotId: string) => setUploadSlots(prev => prev.filter(s => s.id !== slotId));
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    if (uploadSlots.some(s => s.status === 'uploading')) {
+      setError('Espera a que terminen de subir todas las imágenes');
+      setIsLoading(false);
+      return;
+    }
+    if (uploadedImages.length === 0) {
+      setError('Al menos una imagen es requerida');
+      setIsLoading(false);
+      return;
+    }
 
     const finalTitleEn = formData.titleEn.trim() !== '' ? formData.titleEn : formData.title;
     const finalDescriptionEn = formData.descriptionEn.trim() !== '' ? formData.descriptionEn : formData.description;
@@ -103,6 +160,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
           titleEn: finalTitleEn,
           descriptionEn: finalDescriptionEn,
           amenities: selectedAmenities,
+          images: uploadedImages,
         }),
       });
 
@@ -114,6 +172,8 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
       if (!isEdit) {
         setFormData(DEFAULT_FORM);
         setSelectedAmenities([]);
+        setUploadedImages([]);
+        setUploadSlots([]);
       }
 
       onSuccess();
@@ -124,6 +184,8 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
       setIsLoading(false);
     }
   };
+
+  const isSubmitDisabled = isLoading || uploadSlots.some(s => s.status === 'uploading');
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
@@ -237,6 +299,42 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
             </div>
           </div>
 
+          <div>
+            <label className="block text-xs font-bold text-brand-navy-400 uppercase mb-2">Imágenes *</label>
+
+            {(uploadedImages.length > 0 || uploadSlots.length > 0) && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {uploadedImages.map((url) => (
+                  <div key={url} className="relative w-20 h-20 rounded-lg overflow-hidden border border-slate-200 dark:border-brand-navy-700 flex-shrink-0">
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(url)}
+                      className="absolute top-0.5 right-0.5 bg-black/60 hover:bg-black/80 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold"
+                    >✕</button>
+                  </div>
+                ))}
+                {uploadSlots.map((slot) => (
+                  <div key={slot.id} className="w-20 h-20 rounded-lg border border-slate-200 dark:border-brand-navy-700 flex-shrink-0 flex items-center justify-center bg-slate-50 dark:bg-brand-navy-800 p-1">
+                    {slot.status === 'uploading' ? (
+                      <span className="text-[10px] text-slate-400 text-center">Subiendo...</span>
+                    ) : (
+                      <div className="text-center">
+                        <span className="text-[10px] text-red-500 block leading-tight">{slot.errorMsg}</span>
+                        <button type="button" onClick={() => handleDismissError(slot.id)} className="text-[10px] text-slate-400 hover:text-slate-600 mt-0.5">Cerrar</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-brand-navy-700 text-xs font-semibold text-brand-navy-900 dark:text-slate-300 bg-slate-50 dark:bg-brand-navy-800 hover:bg-slate-100 dark:hover:bg-brand-navy-700 cursor-pointer transition-colors">
+              + Agregar imagen
+              <input type="file" accept="image/*" className="hidden" onChange={handleFileSelect} />
+            </label>
+          </div>
+
           <div className="flex items-center gap-2 pt-2">
             <input type="checkbox" id="isPrivate" checked={formData.isPrivate} onChange={handleCheckboxChange} className="w-4 h-4 text-amber-600 border-slate-200 dark:border-brand-navy-700 bg-slate-50 dark:bg-brand-navy-800 rounded outline-none cursor-pointer"/>
             <label htmlFor="isPrivate" className="text-xs font-bold text-brand-navy-400 uppercase cursor-pointer select-none">Marcar como propiedad privada / exclusiva</label>
@@ -246,7 +344,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess, property 
             <button type="button" onClick={onClose} className="px-4 py-2 border border-slate-200 dark:border-brand-navy-700 rounded-xl text-slate-500 font-bold hover:bg-slate-50 dark:hover:bg-brand-navy-800 transition-colors uppercase text-xs">
               Cancelar
             </button>
-            <button disabled={isLoading} type="submit" className="px-5 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-800 text-white font-bold rounded-xl transition-colors uppercase text-xs">
+            <button disabled={isSubmitDisabled} type="submit" className="px-5 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-800 text-white font-bold rounded-xl transition-colors uppercase text-xs">
               {isLoading ? 'Guardando...' : (isEdit ? 'Guardar Cambios' : 'Guardar Propiedad')}
             </button>
           </div>
