@@ -46,9 +46,15 @@ Per FEATURE_SPEC section 3 — now unblocked by Batch 2 (auth) and Batch 4 (isPr
 ## Batch 7 — Cleanup (low risk, no rush — no deadline pressure currently)
 I-3 (migration drift), I-6 (Favorites mock data), I-7 (empty stub files), I-8 (duplicate Property types), I-10 (SVG path), I-11 (contact form), I-13 (operationType data inconsistency), all Polish items P-1 through P-10.
 - **Found during Batch 4 (admin panel):** el role check ('empleado') está duplicado inline en tres lugares (POST de api/properties, DELETE de api/properties/[id], GET de api/appointments) — los tres bloques son idénticos. Extraer a un helper reutilizable (ej. requireEmployeeRole(request)) cuando se llegue a este lote.
+- **Found during Batch 4 (chatbot):** ningún catch block del proyecto imprime errores en consola. Agregar console.error(error) en desarrollo en todos los API routes y services.
+- **Found during i18n lote:** Pre-llenar ScheduleModal con nombre/email del usuario logueado (desde useAuth().profile) — mejora UX, no requisito de spec.
+- **Corregido durante el lote de i18n (no pendiente):** el `value` del `<select>` de tipo de propiedad en AddPropertyModal estaba en inglés (e.g. `"apartment"`) mientras la DB guarda strings en español (`"Apartamento"`). Corregido: los `value` ahora coinciden exactamente con la DB. Se encontraron 2 propiedades corruptas (`"Mansion"` y `"Casa Mancera"` con `type: "house"`) y se corrigieron a `"Casa"` via `updateMany` en esta misma sesión. Si encuentras alguna propiedad con un `type` que no esté en la lista (`Apartamento`, `Casa`, `Terreno`, `Oficina`, `Local Comercial`, `Penthouse`, `Galpón`), es data corrupta por el bug anterior a este fix — reportarlo para corrección manual.
 
 ## Open question for Alejandro
 I-6 (Favorites page uses mock data, never matches real properties) — fold into Batch 7, or treat as a quick win earlier since it's user-facing breakage? Your call.
 
 ## Backlog — fuera de los lotes actuales
 - **Dark mode por defecto:** hoy el sitio carga siempre en light mode al entrar por primera vez. Cambiar el default a dark mode, respetando la preferencia explícita del usuario si ya eligió light (debe persistir esa elección, no resetear en cada visita). No es parte de ningún lote actual — revisar después de cerrar el Lote 4.
+
+## Lección de proceso (2026-06-26)
+Durante esta sesión, tres verificaciones distintas fallaron por la misma razón: confiar en que "el campo no es null/no está vacío" significa "el contenido es correcto", sin verificar el contenido real. Pasó con type:'house' en Property, con el value del <select> de tipo en AddPropertyModal, y con 3 propiedades cuyo titleEn ya existía pero era el texto en español copiado tal cual (o, en un caso, una traducción manual incorrecta). Regla a seguir: cuando una auditoría reporte "X ya está hecho" basándose en presencia de un campo, pedir ver el VALOR real de una muestra antes de aceptar la conclusión, no solo confirmar que el campo no es null.
