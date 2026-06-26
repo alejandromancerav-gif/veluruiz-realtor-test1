@@ -22,3 +22,6 @@ yarn-error.log*
 # Archivos de sistema
 .DS_Store
 *.log
+
+# Caché de TypeScript (generado automáticamente, no es código fuente)
+*.tsbuildinfo
