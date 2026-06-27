@@ -55,6 +55,7 @@ export default function PropertyDetailPage() {
 
         const data = await response.json();
         setProperty(data);
+        fetch(`/api/properties/${propertyId}/view`, { method: 'POST' }).catch(() => {});
       } catch (err: any) {
         console.error("❌ Error cargando detalle:", err);
         setError(err.message || 'Error');

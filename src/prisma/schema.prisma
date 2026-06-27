@@ -38,6 +38,7 @@ model Property {
   updatedAt     DateTime       @updatedAt
   isPrivate     Boolean        @default(false)
   isActive      Boolean        @default(true)
+  views         Int            @default(0)
 
   appointments  Appointment[]
   favorites     Favorite[]
